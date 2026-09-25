@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minesweeper (Windows 7 Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* Windows 7 Wallpaper Background */
+        body {
+            background: radial-gradient(circle at center, #3582a8 0%, #153c65 70%, #0a1f3d 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; /* Stops iOS popup menus on long press */
+        }
+
+        /* Aero Glass Window Effect */
+        .aero-window {
+            background: rgba(240, 248, 255, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.4), 
+                inset 0 1px 0 rgba(255,255,255,0.8),
+                inset 0 0 15px rgba(255,255,255,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Title Bar */
+        .title-bar {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(200,225,255,0.5) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            padding: 4px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: inset 0 -1px 2px rgba(0,0,0,0.1);
+        }
+
+        .title-text {
+            font-size: 14px;
+            color: #1a1a1a;
+            text-shadow: 0 0 5px white, 0 0 10px white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Window Controls */
+        .window-controls {
+            display: flex;
+            gap: 2px;
+        }
+        .win-btn {
+            width: 28px;
+            height: 20px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 3px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(200,200,200,0.5));
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .win-btn.close:hover {
+            background: linear-gradient(to bottom, #faa, #e55);
+            color: white;
+            border-color: #800;
+        }
+
+        /* Menu Bar */
+        .menu-bar {
+            background: rgba(255,255,255,0.6);
+            border-bottom: 1px solid rgba(150, 180, 220, 0.5);
+            padding: 2px 5px;
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            position: relative;
+        }
+        .menu-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid transparent;
+        }
+        .menu-item:hover {
+            background: rgba(200, 225, 255, 0.8);
+            border-color: rgba(150, 180, 220, 0.8);
+            box-shadow: inset 0 0 2px white;
+        }
+
+        /* Dropdowns */
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(245, 250, 255, 0.95);
+            border: 1px solid #99c2ff;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            min-width: 150px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            padding: 4px 0;
+            backdrop-filter: blur(10px);
+        }
+        .dropdown.active { display: flex; }
+        .dropdown-item {
+            padding: 6px 15px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dropdown-item:hover { background: #cce0ff; }
+        .dropdown-divider {
+            height: 1px;
+            background: #99c2ff;
+            margin: 4px 0;
+        }
+
+        /* Game Area */
+        .game-area {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(220, 235, 255, 0.4));
+        }
+
+        /* Status Bar (Counters & Face) */
+        .status-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(150, 180, 220, 0.5);
+            border-radius: 4px;
+            padding: 6px 10px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .digital-display {
+            font-family: 'Share Tech Mono', monospace;
+            background: #111;
+            color: #ff3333;
+            font-size: 24px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 2px inset #555;
+            min-width: 65px;
+            text-align: right;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+            letter-spacing: 2px;
+        }
+
+        .face-btn {
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f0f8ff, #b3d4ff);
+            border: 2px solid #fff;
+            border-bottom-color: #99c2ff;
+            border-right-color: #99c2ff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .face-btn:active {
+            transform: scale(0.95);
+            border-top-color: #99c2ff;
+            border-left-color: #99c2ff;
+            border-bottom-color: #fff;
+            border-right-color: #fff;
+        }
+
+        /* The Grid */
+        .grid-container {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 5px;
+            border: 1px solid #99c2ff;
+            border-radius: 4px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow: auto;
+        }
+
+        .mine-grid {
+            display: grid;
+            gap: 1px;
+            background: #99c2ff;
+            border: 1px solid #99c2ff;
+        }
+
+        /* Tiles */
+        .tile {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #e6f0ff 0%, #b3d4ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.6);
+            border-bottom-color: rgba(100,150,220,0.5);
+            border-right-color: rgba(100,150,220,0.5);
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.8);
+            touch-action: manipulation; /* Prevents double-tap zoom delay */
+        }
+        .tile:hover:not(.revealed) {
+            background: linear-gradient(135deg, #ffffff 0%, #cce0ff 100%);
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.8);
+        }
+        .tile:active:not(.revealed), .tile.revealed {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid #d0e0ff;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+            cursor: default;
+        }
+        .tile.exploded { background: red; color: white; }
+        .tile.wrong-flag { background: #ffcccc; }
+
+        /* Number Colors */
+        .color-1 { color: #0000FF; }
+        .color-2 { color: #008000; }
+        .color-3 { color: #FF0000; }
+        .color-4 { color: #000080; }
+        .color-5 { color: #800000; }
+        .color-6 { color: #008080; }
+        .color-7 { color: #000000; }
+        .color-8 { color: #808080; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        .modal {
+            background: #f0f8ff;
+            border: 1px solid #99c2ff;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 300px;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: linear-gradient(to bottom, #fff, #cce0ff);
+            padding: 8px 12px;
+            border-bottom: 1px solid #99c2ff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .modal-body { padding: 15px; }
+        .modal-footer {
+            padding: 10px 15px;
+            background: rgba(200, 225, 255, 0.3);
+            border-top: 1px solid #99c2ff;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn {
+            padding: 4px 15px;
+            background: linear-gradient(to bottom, #fff, #e6f0ff);
+            border: 1px solid #99c2ff;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn:hover { background: linear-gradient(to bottom, #e6f0ff, #cce0ff); }
+        .btn:active { background: #b3d4ff; }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+            font-size: 14px;
+        }
+        .input-group input {
+            width: 60px;
+            padding: 3px;
+            border: 1px solid #99c2ff;
+            border-radius: 3px;
+            text-align: right;
+        }
+
+        /* Mobile specific fixes */
+        @media (max-width: 600px) {
+            .tile { width: 20px; height: 20px; font-size: 14px; }
+            .aero-window { max-width: 98vw; }
+            .digital-display { font-size: 20px; min-width: 55px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="aero-window" id="mainWindow">
+    <!-- Title Bar -->
+    <div class="title-bar" id="titleBar">
+        <div class="title-text">
+            <span>💣</span> Minesweeper
+        </div>
+        <div class="window-controls">
+            <div class="win-btn" onclick="alert('Minimize not supported in web mode.')">_</div>
+            <div class="win-btn" onclick="alert('Maximize not supported in web mode.')">□</div>
+            <div class="win-btn close" onclick="app.closeGame()">X</div>
+        </div>
+    </div>
+
+    <!-- Menu Bar -->
+    <div class="menu-bar">
+        <div class="menu-item" id="gameMenuBtn">Game</div>
+        <div class="menu-item" id="optionsMenuBtn">Options</div>
+        
+        <!-- Game Dropdown -->
+        <div class="dropdown" id="gameDropdown" style="left: 5px;">
+            <div class="dropdown-item" onclick="app.setDifficulty('beginner')">New Game (Beginner) <span class="text-xs text-gray-500">F2</span></div>
+            <div class="dropdown-item" onclick="app.restartLayout()">Restart This Layout</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="app.showStats()">Statistics...</div>
+        </div>
+
+        <!-- Options Dropdown -->
+        <div class="dropdown" id="optionsDropdown" style="left: 60px;">
+            <div class="dropdown-item" onclick="app.setDifficulty('beginner')">Beginner <span class="text-xs text-gray-500">9x9, 10</span></div>
+            <div class="dropdown-item" onclick="app.setDifficulty('intermediate')">Intermediate <span class="text-xs text-gray-500">16x16, 40</span></div>
+            <div class="dropdown-item" onclick="app.setDifficulty('expert')">Expert <span class="text-xs text-gray-500">30x16, 99</span></div>
+            <div class="dropdown-item" onclick="app.openCustomModal()">Custom...</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="app.toggleTheme()" id="themeToggleText">Theme: Mines (💣)</div>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <div class="game-area">
+        <div class="status-bar">
+            <div class="digital-display" id="minesDisplay">010</div>
+            <div class="face-btn" id="faceBtn" onclick="app.startNewGame()">🙂</div>
+            <div class="digital-display" id="timeDisplay">000</div>
+        </div>
+        <div class="grid-container">
+            <div class="mine-grid" id="grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Board Modal -->
+<div class="modal-overlay" id="customModal">
+    <div class="modal">
+        <div class="modal-header">Custom Field</div>
+        <div class="modal-body">
+            <div class="input-group">
+                <label>Height (9-24):</label>
+                <input type="number" id="customHeight" min="9" max="24" value="20">
+            </div>
+            <div class="input-group">
+                <label>Width (9-30):</label>
+                <input type="number" id="customWidth" min="9" max="30" value="20">
+            </div>
+            <div class="input-group">
+                <label>Mines (10-667):</label>
+                <input type="number" id="customMines" min="10" max="667" value="50">
+            </div>
+            <div class="text-xs text-red-500 hidden" id="customError">Invalid input parameters.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="app.applyCustom()">OK</button>
+            <button class="btn" onclick="app.closeCustomModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal-overlay" id="statsModal">
+    <div class="modal">
+        <div class="modal-header">Minesweeper Statistics</div>
+        <div class="modal-body text-sm">
+            <div class="flex justify-between border-b border-blue-200 pb-2 mb-2">
+                <strong>Difficulty:</strong>
+                <select id="statDifficultySelect" class="border border-blue-300 rounded p-1 text-xs outline-none" onchange="app.updateStatsDisplay()">
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="expert">Expert</option>
+                </select>
+            </div>
+            <div class="flex justify-between mb-1"><span>Games Played:</span> <span id="statPlayed">0</span></div>
+            <div class="flex justify-between mb-1"><span>Games Won:</span> <span id="statWon">0</span></div>
+            <div class="flex justify-between mb-1"><span>Win Percentage:</span> <span id="statPercent">0%</span></div>
+            <div class="flex justify-between font-bold mt-3 text-blue-800"><span>Best Time:</span> <span id="statBestTime">---</span></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="app.resetStats()">Reset</button>
+            <button class="btn" onclick="app.closeStatsModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Game Over Modal (Win/Loss) -->
+<div class="modal-overlay" id="endGameModal">
+    <div class="modal" style="width: 250px;">
+        <div class="modal-header" id="endGameTitle">Game Over</div>
+        <div class="modal-body text-center">
+            <div class="text-4xl mb-2" id="endGameIcon">💣</div>
+            <div class="font-bold mb-2" id="endGameMessage">You hit a mine!</div>
+            <div class="text-sm text-gray-600 mb-2">Time: <span id="endGameTime"></span> seconds</div>
+            <div class="text-xs text-blue-500 cursor-pointer hover:underline" onclick="app.restartLayout(); app.closeEndGameModal();">Restart this layout</div>
+        </div>
+        <div class="modal-footer justify-center">
+            <button class="btn" onclick="app.closeEndGameModal(); app.startNewGame();">Play Again</button>
+            <button class="btn" onclick="app.closeEndGameModal();">Review Map</button>
+        </div>
+    </div>
+</div>
+
+<script>
+class Minesweeper {
+    constructor() {
+        this.board = [];
+        this.state = 'idle'; // idle, playing, won, lost
+        this.timer = null;
+        this.timeElapsed = 0;
+        this.flagsPlaced = 0;
+        
+        // Settings
+        this.theme = 'mines'; // 'mines' or 'flowers'
+        this.config = { width: 9, height: 9, mines: 10, difficulty: 'beginner' };
+        this.savedLayout = null; // To replay the exact board
+        this.isReplay = false;
+
+        // Statistics (stored in localStorage)
+        this.stats = JSON.parse(localStorage.getItem('minesweeperStats')) || {
+            beginner: { played: 0, won: 0, bestTime: 999 },
+            intermediate: { played: 0, won: 0, bestTime: 999 },
+            expert: { played: 0, won: 0, bestTime: 999 }
+        };
+
+        // DOM Elements
+        this.gridEl = document.getElementById('grid');
+        this.minesDisplay = document.getElementById('minesDisplay');
+        this.timeDisplay = document.getElementById('timeDisplay');
+        this.faceBtn = document.getElementById('faceBtn');
+        
+        this.setupEventListeners();
+        this.setDifficulty('beginner');
+    }
+
+    get icons() {
+        if (this.theme === 'flowers') {
+            return { mine: '🌸', flag: '🚩', faceIdle: '🙂', faceDown: '😮', faceWin: '😎', faceLose: '😵' };
+        }
+        return { mine: '💣', flag: '🚩', faceIdle: '🙂', faceDown: '😮', faceWin: '😎', faceLose: '😵' };
+    }
+
+    setupEventListeners() {
+        // Dropdown Menus
+        const toggleDropdown = (btnId, dropId) => {
+            const drop = document.getElementById(dropId);
+            const isAc = drop.classList.contains('active');
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+            if (!isAc) drop.classList.add('active');
+        };
+
+        document.getElementById('gameMenuBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown('gameMenuBtn', 'gameDropdown'); });
+        document.getElementById('optionsMenuBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown('optionsMenuBtn', 'optionsDropdown'); });
+        document.addEventListener('click', () => document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active')));
+
+        // Grid interactions
+        this.gridEl.addEventListener('contextmenu', e => e.preventDefault());
+        this.gridEl.addEventListener('mousedown', (e) => {
+            if (this.state === 'playing' || this.state === 'idle') this.faceBtn.textContent = this.icons.faceDown;
+        });
+        this.gridEl.addEventListener('mouseup', () => {
+            if (this.state === 'playing' || this.state === 'idle') this.faceBtn.textContent = this.icons.faceIdle;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F2') this.startNewGame();
+        });
+    }
+
+    setDifficulty(level) {
+        if (level === 'beginner') this.config = { width: 9, height: 9, mines: 10, difficulty: 'beginner' };
+        else if (level === 'intermediate') this.config = { width: 16, height: 16, mines: 40, difficulty: 'intermediate' };
+        else if (level === 'expert') this.config = { width: 30, height: 16, mines: 99, difficulty: 'expert' };
+        this.startNewGame();
+    }
+
+    startNewGame() {
+        this.isReplay = false;
+        this.savedLayout = null;
+        this.initBoard();
+    }
+
+    restartLayout() {
+        if (!this.savedLayout) {
+            alert("No previous layout to restart!");
+            return;
+        }
+        this.isReplay = true;
+        this.initBoard();
+    }
+
+    initBoard() {
+        this.stopTimer();
+        this.state = 'idle';
+        this.timeElapsed = 0;
+        this.flagsPlaced = 0;
+        this.board = [];
+        this.updateDisplays();
+        this.faceBtn.textContent = this.icons.faceIdle;
+
+        const { width, height } = this.config;
+        this.gridEl.style.gridTemplateColumns = `repeat(${width}, 24px)`;
+        this.gridEl.innerHTML = '';
+
+        for (let r = 0; r < height; r++) {
+            let row = [];
+            for (let c = 0; c < width; c++) {
+                let cell = { r, c, mine: false, revealed: false, flagged: false, neighbors: 0 };
+                row.push(cell);
+
+                let el = document.createElement('div');
+                el.className = 'tile';
+                el.dataset.r = r;
+                el.dataset.c = c;
+                
+                // Click handlers
+                el.addEventListener('mousedown', (e) => this.handleMouseDown(e, cell));
+                el.addEventListener('mouseup', (e) => this.handleMouseUp(e, cell));
+                el.addEventListener('dblclick', () => this.handleChord(cell));
+
+                // Mobile touch handlers for fast & accurate flagging (Long press)
+                let touchTimer = null;
+                let isDragging = false;
+                let longPressed = false;
+
+                el.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) return;
+                    isDragging = false;
+                    longPressed = false;
+                    if (!cell.flagged && !cell.revealed) el.classList.add('revealed');
+                    
+                    touchTimer = setTimeout(() => {
+                        touchTimer = null;
+                        longPressed = true;
+                        el.classList.remove('revealed');
+                        this.handleRightClick(cell);
+                        if (navigator.vibrate) navigator.vibrate(40); // Haptic feedback if supported
+                    }, 400); // Snappy 400ms flag timer
+                }, { passive: true });
+
+                el.addEventListener('touchmove', () => {
+                    isDragging = true;
+                    if (touchTimer) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                        el.classList.remove('revealed');
+                    }
+                }, { passive: true });
+
+                el.addEventListener('touchend', (e) => {
+                    if (touchTimer) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                        el.classList.remove('revealed');
+                    } else if (longPressed) {
+                        e.preventDefault(); // Prevent standard click after long press
+                    }
+                });
+
+                // Prevent duplicate flag toggle if native context menu fires
+                el.addEventListener('contextmenu', (e) => { 
+                    e.preventDefault(); 
+                    if (!longPressed) this.handleRightClick(cell); 
+                });
+
+                this.gridEl.appendChild(el);
+            }
+            this.board.push(row);
+        }
+
+        // If it's a replay, populate mines immediately
+        if (this.isReplay && this.savedLayout) {
+            this.savedLayout.forEach(m => {
+                this.board[m.r][m.c].mine = true;
+            });
+            this.calculateNeighbors();
+        }
+    }
+
+    generateMines(excludeR, excludeC) {
+        const { width, height, mines } = this.config;
+        let placed = 0;
+        this.savedLayout = [];
+
+        while (placed < mines) {
+            let r = Math.floor(Math.random() * height);
+            let c = Math.floor(Math.random() * width);
+            
+            // Avoid placing on the first clicked square AND avoid duplicate mines
+            if (!this.board[r][c].mine && (r !== excludeR || c !== excludeC)) {
+                this.board[r][c].mine = true;
+                this.savedLayout.push({r, c});
+                placed++;
+            }
+        }
+        this.calculateNeighbors();
+    }
+
+    calculateNeighbors() {
+        const { width, height } = this.config;
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                if (this.board[r][c].mine) continue;
+                let count = 0;
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        let nr = r + i, nc = c + j;
+                        if (nr >= 0 && nr < height && nc >= 0 && nc < width && this.board[nr][nc].mine) {
+                            count++;
+                        }
+                    }
+                }
+                this.board[r][c].neighbors = count;
+            }
+        }
+    }
+
+    handleMouseDown(e, cell) {
+        if (this.state === 'won' || this.state === 'lost') return;
+        if (e.button === 0 && !cell.revealed && !cell.flagged) {
+            this.getEl(cell.r, cell.c).classList.add('revealed'); // Visual pressing down effect
+        }
+    }
+
+    handleMouseUp(e, cell) {
+        if (this.state === 'won' || this.state === 'lost') return;
+        
+        // Remove visual pressing down effect if we drag off
+        const els = document.querySelectorAll('.tile:not(.revealed-permanent)');
+        els.forEach(el => {
+            if(!this.board[el.dataset.r][el.dataset.c].revealed) el.classList.remove('revealed');
+        });
+
+        if (e.button === 0) {
+            this.revealCell(cell);
+        } else if (e.button === 1) { // Middle click for chording
+            this.handleChord(cell);
+        }
+    }
+
+    handleRightClick(cell) {
+        if (this.state === 'won' || this.state === 'lost' || cell.revealed) return;
+        if (this.state === 'idle') {
+            this.state = 'playing';
+            this.startTimer();
+        }
+
+        cell.flagged = !cell.flagged;
+        this.flagsPlaced += cell.flagged ? 1 : -1;
+        
+        let el = this.getEl(cell.r, cell.c);
+        el.textContent = cell.flagged ? this.icons.flag : '';
+        this.updateDisplays();
+    }
+
+    handleChord(cell) {
+        if (this.state !== 'playing' || !cell.revealed || cell.neighbors === 0) return;
+
+        // Count surrounding flags
+        let flagCount = 0;
+        let neighbors = [];
+        const { width, height } = this.config;
+
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                if (i === 0 && j === 0) continue;
+                let nr = cell.r + i, nc = cell.c + j;
+                if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                    if (this.board[nr][nc].flagged) flagCount++;
+                    else if (!this.board[nr][nc].revealed) neighbors.push(this.board[nr][nc]);
+                }
+            }
+        }
+
+        if (flagCount === cell.neighbors) {
+            neighbors.forEach(n => this.revealCell(n));
+        }
+    }
+
+    revealCell(cell) {
+        if (cell.revealed || cell.flagged || this.state === 'won' || this.state === 'lost') return;
+
+        // First click logic
+        if (this.state === 'idle') {
+            this.state = 'playing';
+            if (!this.isReplay) this.generateMines(cell.r, cell.c);
+            this.startTimer();
+        }
+
+        cell.revealed = true;
+        let el = this.getEl(cell.r, cell.c);
+        el.classList.add('revealed', 'revealed-permanent');
+
+        if (cell.mine) {
+            el.classList.add('exploded');
+            el.textContent = this.icons.mine;
+            this.gameOver(false);
+            return;
+        }
+
+        if (cell.neighbors > 0) {
+            el.textContent = cell.neighbors;
+            el.classList.add(`color-${cell.neighbors}`);
+        } else {
+            // Flood fill
+            const { width, height } = this.config;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    let nr = cell.r + i, nc = cell.c + j;
+                    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                        this.revealCell(this.board[nr][nc]);
+                    }
+                }
+            }
+        }
+
+        this.checkWin();
+    }
+
+    checkWin() {
+        if (this.state !== 'playing') return;
+        const { width, height, mines } = this.config;
+        let revealedCount = 0;
+        
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                if (this.board[r][c].revealed) revealedCount++;
+            }
+        }
+
+        if (revealedCount === (width * height) - mines) {
+            this.gameOver(true);
+        }
+    }
+
+    gameOver(won) {
+        this.state = won ? 'won' : 'lost';
+        this.stopTimer();
+        this.faceBtn.textContent = won ? this.icons.faceWin : this.icons.faceLose;
+
+        const { width, height } = this.config;
+        
+        // Reveal mines and check flags
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                let cell = this.board[r][c];
+                let el = this.getEl(r, c);
+                
+                if (cell.mine && !cell.flagged && !cell.revealed) {
+                    el.classList.add('revealed');
+                    el.textContent = this.icons.mine;
+                } else if (!cell.mine && cell.flagged) {
+                    el.classList.add('wrong-flag');
+                    el.textContent = '❌'; // Wrong flag
+                } else if (won && cell.mine && !cell.flagged) {
+                    // Auto flag remaining mines on win
+                    cell.flagged = true;
+                    el.textContent = this.icons.flag;
+                    this.flagsPlaced++;
+                }
+            }
+        }
+
+        this.updateDisplays();
+
+        // Update Stats
+        if (this.config.difficulty !== 'custom') {
+            let s = this.stats[this.config.difficulty];
+            s.played++;
+            if (won) {
+                s.won++;
+                if (this.timeElapsed < s.bestTime) s.bestTime = this.timeElapsed;
+            }
+            localStorage.setItem('minesweeperStats', JSON.stringify(this.stats));
+        }
+
+        this.showEndGameModal(won);
+    }
+
+    getEl(r, c) {
+        return this.gridEl.children[r * this.config.width + c];
+    }
+
+    // Timers & Display
+    startTimer() {
+        this.stopTimer();
+        this.timer = setInterval(() => {
+            if (this.timeElapsed < 999) this.timeElapsed++;
+            this.updateDisplays();
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timer) clearInterval(this.timer);
+    }
+
+    updateDisplays() {
+        let minesLeft = this.config.mines - this.flagsPlaced;
+        // Handle negative display (up to -99)
+        let formattedMines = minesLeft >= 0 
+            ? minesLeft.toString().padStart(3, '0') 
+            : "-" + Math.abs(minesLeft).toString().padStart(2, '0');
+        
+        this.minesDisplay.textContent = formattedMines;
+        this.timeDisplay.textContent = this.timeElapsed.toString().padStart(3, '0');
+    }
+
+    toggleTheme() {
+        this.theme = this.theme === 'mines' ? 'flowers' : 'mines';
+        document.getElementById('themeToggleText').textContent = `Theme: ${this.theme === 'mines' ? 'Mines (💣)' : 'Flowers (🌸)'}`;
+        // Visually update board if game is over
+        if (this.state === 'won' || this.state === 'lost') {
+            this.gameOver(this.state === 'won'); // Re-trigger game over to draw new icons
+        } else {
+             this.faceBtn.textContent = this.icons.faceIdle;
+        }
+    }
+
+    // Modals
+    openCustomModal() { document.getElementById('customModal').style.display = 'flex'; }
+    closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+    
+    applyCustom() {
+        let w = parseInt(document.getElementById('customWidth').value);
+        let h = parseInt(document.getElementById('customHeight').value);
+        let m = parseInt(document.getElementById('customMines').value);
+        let err = document.getElementById('customError');
+
+        if (isNaN(w) || isNaN(h) || isNaN(m) || w < 9 || w > 30 || h < 9 || h > 24 || m < 10 || m >= (w * h)) {
+            err.classList.remove('hidden');
+            return;
+        }
+
+        err.classList.add('hidden');
+        this.config = { width: w, height: h, mines: m, difficulty: 'custom' };
+        this.closeCustomModal();
+        this.startNewGame();
+    }
+
+    showStats() {
+        document.getElementById('statDifficultySelect').value = this.config.difficulty === 'custom' ? 'beginner' : this.config.difficulty;
+        this.updateStatsDisplay();
+        document.getElementById('statsModal').style.display = 'flex';
+    }
+
+    updateStatsDisplay() {
+        let diff = document.getElementById('statDifficultySelect').value;
+        let s = this.stats[diff];
+        document.getElementById('statPlayed').textContent = s.played;
+        document.getElementById('statWon').textContent = s.won;
+        document.getElementById('statPercent').textContent = s.played > 0 ? Math.round((s.won / s.played) * 100) + '%' : '0%';
+        document.getElementById('statBestTime').textContent = s.bestTime === 999 ? '---' : s.bestTime + ' s';
+    }
+
+    closeStatsModal() { document.getElementById('statsModal').style.display = 'none'; }
+    
+    resetStats() {
+        this.stats = {
+            beginner: { played: 0, won: 0, bestTime: 999 },
+            intermediate: { played: 0, won: 0, bestTime: 999 },
+            expert: { played: 0, won: 0, bestTime: 999 }
+        };
+        localStorage.setItem('minesweeperStats', JSON.stringify(this.stats));
+        this.updateStatsDisplay();
+    }
+
+    showEndGameModal(won) {
+        setTimeout(() => {
+            document.getElementById('endGameModal').style.display = 'flex';
+            document.getElementById('endGameTitle').textContent = won ? "You Won!" : "Game Over";
+            document.getElementById('endGameIcon').textContent = won ? this.icons.faceWin : this.icons.mine;
+            document.getElementById('endGameMessage').textContent = won ? "Congratulations! Board cleared." : "You hit a mine!";
+            document.getElementById('endGameTime').textContent = this.timeElapsed;
+        }, 500); // Small delay to let user see the board
+    }
+
+    closeEndGameModal() { document.getElementById('endGameModal').style.display = 'none'; }
+
+    closeGame() {
+        // Just a visual gag since we can't actually close the browser window easily via script
+        document.getElementById('mainWindow').style.display = 'none';
+        setTimeout(() => {
+            alert("Application 'closed'. Reload the page to open again!");
+        }, 100);
+    }
+}
+
+// Initialize Application
+const app = new Minesweeper();
+
+// Make app accessible globally for inline HTML event handlers
+window.app = app;
+</script>
+</body>
+</html>
